@@ -1,5 +1,6 @@
 package TradeCenter;
 
+import ClientServer.MessageServer;
 import Interface.searchCard.filterChoice.PokemonAll;
 import TradeCenter.Card.Card;
 import TradeCenter.Card.CardCatalog;
@@ -98,22 +99,12 @@ public class TradeCenter {
         return "USER-" + contUsers;
     }
 
-    /**
-     * A method that verify if the passwords are the same when singin-up
-     * @param password1 the password
-     * @param password2 check for first password
-     * @return if the password are equals
-     */
+
     public boolean verifyPassword(String password1, String password2){
         return password1.equals(password2);
     }
 
-    /**
-     * A method that checks if the user's password is correct
-     * @param username
-     * @param password
-     * @return if the login ended in a correct way
-     */
+
     public boolean loggedIn(String username, String password){
         Customer customer;
         try{
@@ -154,11 +145,7 @@ public class TradeCenter {
         proxy.updateCustomer(customers.get(customer.getId()));
     }
 
-    /**
-     * A method that removes a card from a Customer Wishlist
-     * @param cardDescription the card to remove
-     * @param customer the customer that wants to remove the card
-     */
+
     public void removeFromWishList(Description cardDescription, Customer customer) {
         customers.get(customer.getId()).removeFromWishList(cardDescription);
         proxy.updateCustomer(customers.get(customer.getId()));
@@ -176,7 +163,7 @@ public class TradeCenter {
      * User can find another user by searching his name
      * @return
      */
-    public Customer searchCustomer(String username){
+    public synchronized Customer searchCustomer(String username){
         for(String key : customers.keySet()){
             if((customers.get(key)).getUsername().equals(username)){
                 return customers.get(key);
@@ -186,12 +173,7 @@ public class TradeCenter {
         throw new UserNotFoundException();
     }
 
-    /**
-     * A method that search all the customers that have a username similar to a string searched
-     * @param username the string for the research
-     * @param myUsername a string to exclude myself from the research
-     * @return the list of customers that corresponds to the search
-     */
+
     public ArrayList<Customer> searchUsers(String username, String myUsername){
         ArrayList<Customer> results = new ArrayList<>();
         String usernameLow = username.toLowerCase();
@@ -204,11 +186,7 @@ public class TradeCenter {
         return results;
     }
 
-    /**
-     *  A method that checks if any of the user has a given card
-     * @param description the card that has to be searched
-     * @return the list of the users that have that card in their collection
-     */
+
     public ArrayList<HashMap<Customer, Collection>> searchByDescription(Description description){
         ArrayList<HashMap<Customer, Collection>> cards = new ArrayList<HashMap<Customer, Collection>>();
 
@@ -292,18 +270,13 @@ public class TradeCenter {
     }
 
     //todo add javadocs
-    public void updateTrade(Offer offer){
+    public boolean updateTrade(Offer offer){
         Trade trade = takeStartedTrade(offer.getCustomer1(), offer.getCustomer2());
         trade.update(offer);
+        return true;
     }
 
-    /**
-     * A method that checks if two users are already trading
-     *
-     * @param myCustomer customer1
-     * @param otherCustomer customer2
-     * @return if the user are already trading
-     */
+
     public boolean notAlreadyTradingWith(Customer myCustomer, Customer otherCustomer){
         boolean flag = true;
         for(Trade trade: activeTrades){
@@ -364,7 +337,7 @@ public class TradeCenter {
         }
     }
 
-    public void endTrade(Trade trade, boolean result){
+    public synchronized void endTrade(Trade trade, boolean result){
         if(result){
             switchCards(trade);
         }
@@ -431,12 +404,7 @@ public class TradeCenter {
         return doneTradesList;
     }
 
-    /**
-     * A method that shows all the trades of a user
-     *
-     * @param customer the user
-     * @return the list of trades of the user, first the active ones
-     */
+
     public ArrayList<Trade> showUserTrades(Customer customer){
         ArrayList<Trade> tradesList = new ArrayList<>();
         tradesList.addAll(showUserActiveTrades(customer));
