@@ -3,9 +3,15 @@ package Interface;
 
 import ClientServer.MessageServer;
 import ClientServer.MessageType;
+import ClientServer.ServerIP;
 import TradeCenter.Card.Description;
 import TradeCenter.Customers.Collection;
 import TradeCenter.Customers.Customer;
+import com.jfoenix.controls.JFXButton;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.ScaleTransition;
+import javafx.animation.TranslateTransition;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -21,6 +27,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.util.Duration;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,30 +37,38 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static javafx.scene.input.KeyCode.U;
+/**
+ * the interface of the Whishlist view
+ */
 
 public class WishListScene{
 
     static ArrayList<Description> wish;
     static Customer user;
 
-    static BorderPane display(ArrayList<Description> wishList, Customer customer)  {
+    /**
+     * constructor of the scene
+     * @param wishList a whishlist
+     * @param customer the customer
+     * @return the scene
+     */
+    public static BorderPane display(ArrayList<Description> wishList, Customer customer)  {
 
         user=customer;
         wish=wishList;
 
         BorderPane border = new BorderPane();
         FlowPane flow = new FlowPane();
-        HBox hBox2 = new HBox();
-        hBox2.setPadding(new Insets(10));
-        hBox2.setSpacing(10);
-        hBox2.setStyle("-fx-background-color: orange");
-        hBox2.setAlignment(Pos.CENTER);
+        HBox titleBox = new HBox();
+        titleBox.setPadding(new Insets(10));
+        titleBox.setSpacing(10);
+        titleBox.setStyle("-fx-background-color: orange");
+        titleBox.setAlignment(Pos.CENTER);
         TextFlow textFlow = new TextFlow();
         Text text = new Text(customer.getUsername() +"'s wish list");
         text.setStyle("-fx-font-weight: bold");
         textFlow.getChildren().add(text);
-        hBox2.getChildren().add(textFlow);
+        titleBox.getChildren().add(textFlow);
 
 
         flow.setPadding(new Insets(5, 5, 5, 5));
@@ -66,55 +81,74 @@ public class WishListScene{
         scroll.setFitToWidth(true);
         scroll.setContent(flow);
 
-        HBox hbox1;
-
-
-        for(Description file2 : wishList){
+        for(Description description : wishList){
             BorderPane pane = new BorderPane();
             Pane pane2 = new Pane();
             pane.setPadding(new Insets(0));
 
-            hbox1 = new HBox();
-            hbox1.setPadding(new Insets(10));
-            hbox1.setSpacing(10);
-            hbox1.setStyle("-fx-background-color: orange");
+            HBox buttonBox = new HBox();
+            buttonBox.setPadding(new Insets(10));
+            buttonBox.setSpacing(10);
+            buttonBox.setStyle("-fx-background-color: orange");
 
-            Button button1 = new Button("Remove "+ "\uD83D\uDD71");
-            button1.setPrefSize(100, 20);
-            hbox1.getChildren().add(button1);
+            JFXButton remove = new JFXButton("Remove "+ "\uD83D\uDD71");
+            remove.setButtonType(JFXButton.ButtonType.RAISED);
+            remove.setPrefSize(100, 20);
+            buttonBox.getChildren().add(remove);
 
-            Button button2 = new Button("Search " + "\uD83D\uDD0D");
-            button1.setPrefSize(100, 20);
-            hbox1.getChildren().add(button2);
+            JFXButton search = new JFXButton("Search " + "\uD83D\uDD0D");
+            search.setButtonType(JFXButton.ButtonType.RAISED);
+            remove.setPrefSize(100, 20);
+            buttonBox.getChildren().add(search);
 
             
-            Image image3 = SwingFXUtils.toFXImage(file2.getPic(),null);
+            Image image = SwingFXUtils.toFXImage(description.getPic(),null);
             ImageView card = new ImageView();
-            card.setImage(image3);
+            card.setImage(image);
             pane2.getChildren().add(card);
             card.setPreserveRatio(true);
             card.setFitHeight(313);
+            ImageView cardCopy = new ImageView(image);
+            cardCopy.setPreserveRatio(true);
+            cardCopy.setFitHeight(313);
 
+            card.setOnMouseEntered(event -> {
+                TranslateTransition translation = new TranslateTransition(Duration.millis(100), card);
+                translation.interpolatorProperty().set(Interpolator.SPLINE(.1, .1, .7, .7));
+                translation.setByY(-50);
+                translation.setAutoReverse(true);
+                translation.setCycleCount(2);
+                translation.play();
+            });
+            card.setOnMouseExited(event -> {
+                TranslateTransition translation = new TranslateTransition(Duration.millis(100), card);
+                translation.interpolatorProperty().set(Interpolator.SPLINE(.1, .1, .7, .7));
+                translation.setFromY(card.getY());
+                translation.setToY(-card.getY());
+                translation.setAutoReverse(true);
+                translation.setCycleCount(1);
+                translation.play();
+            });
             pane.setCenter(card);
-            pane.setBottom(hbox1);
-
-            button1.setOnAction(event -> {
+            pane.setBottom(buttonBox);
+            remove.setOnAction(event -> {
+                flow.getChildren().remove(pane);
                 Socket socket;
                 try {
-                    socket = new Socket("localhost", 8889);
+                    socket = new Socket(ServerIP.ip, ServerIP.port);
                     System.out.println("Client connected");
                     ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
                     System.out.println("Ok");
-                    os.writeObject(new MessageServer(MessageType.REMOVEWISH, customer.getUsername(), file2));
+                    os.writeObject(new MessageServer(MessageType.REMOVEWISH, customer.getId(), description));
+                    try {
+                        Thread.sleep(55);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     socket.close();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
-
-                flow.getChildren().remove(pane);
-
-
             });
 
             EventHandler<javafx.scene.input.MouseEvent> eventHandlerBox =
@@ -122,46 +156,59 @@ public class WishListScene{
 
                         @Override
                         public void handle(javafx.scene.input.MouseEvent e) {
-                            MainWindow.refreshDynamicContent(Demo.display(card, "wish"));
+                            MainWindow.refreshDynamicContent(Demo.display(cardCopy, "wish"));
                         }
                     };
 
             card.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_CLICKED, eventHandlerBox);
 
-            button2.setOnAction(event -> {
+            search.setOnAction(event -> {
                 System.out.println("welcome client");
                 Socket socket = null;
                 try {
-                    socket = new Socket("localhost", 8889);
+                    socket = new Socket(ServerIP.ip, ServerIP.port);
                     System.out.println("Client connected");
                     ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
                     System.out.println("Ok");
-                    os.writeObject(new MessageServer(MessageType.SEARCHDESCRIPTION, file2));
+                    os.writeObject(new MessageServer(MessageType.SEARCHDESCRIPTION, description, customer.getUsername()));
                     ObjectInputStream is = new ObjectInputStream(socket.getInputStream());
-                    ArrayList<HashMap<Customer, Collection>> returnMessage = (ArrayList<HashMap<Customer,Collection>>) is.readObject();
-                    MainWindow.refreshDynamicContent(SearchDescriptionScene.display(returnMessage, customer));
+                    ArrayList<String> returnMessage = (ArrayList<String>) is.readObject();
+                    MainWindow.refreshDynamicContent(SearchDescriptionScene.display(description ,returnMessage, customer));
                     socket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (ClassNotFoundException e) {
+                } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }
 
-
             });
 
+            ScaleTransition st = new ScaleTransition(Duration.millis(500),card);
+            st.setFromX(0);
+            st.setFromY(0);
+            st.setToX(1);
+            st.setToY(1);
+            st.setAutoReverse(true);
+            st.play();
+            FadeTransition ft = new FadeTransition(Duration.millis(700), buttonBox);
+            ft.setFromValue(0);
+            ft.setToValue(1);
+            ft.setCycleCount(1);
+            ft.setAutoReverse(true);
+            ft.play();
             flow.getChildren().add(pane);
             flow.setMargin(pane, new Insets(5, 0, 5, 0));
         }
         scroll.setPadding(new Insets(3));
         scroll.setStyle("-fx-background-color: orange");
         border.setCenter(scroll);
-        border.setTop(hBox2);
+        border.setTop(titleBox);
         return border;
     }
 
 
-
+    /**
+     * method to go back at the first view
+     * @return display the scene
+     */
     static BorderPane refresh(){
         return display(wish, user);
     }

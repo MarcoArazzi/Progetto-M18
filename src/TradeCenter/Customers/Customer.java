@@ -9,8 +9,10 @@ import TradeCenter.Exceptions.UserExceptions.CheckPasswordConditionsException;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 
+/**
+ *Class that characterizes a customer
+ */
 public class Customer implements Serializable {
 
 
@@ -35,52 +37,6 @@ public class Customer implements Serializable {
         this.password = checkPasswordConditions(password);
         this.collection = new Collection();
         this.wishList = new ArrayList<>();
-    }
-
-    /**
-     * Method to add a Card to the Customer's collection.
-     *
-     * @param card New Card to add
-     */
-    public void addCard(Card card) {
-        try {
-            collection.addCardToCollection(card);
-        } catch (AddCardException e) {
-            System.err.println(e.getMessage());
-        }
-
-    }
-
-    /**
-     * Remove a Card from the collection of the Customers who calls this method.
-     *
-     * @param card Card to remove
-     */
-    public void removeCard(Card card) {
-        try {
-            collection.removeCardFromCollection(card);
-        } catch (RemoveCardException e) {
-            System.err.println(e.getMessage());
-        }
-    }
-
-    /**
-     * Search a Card in the collections of the customers by tags.
-     *
-     * @param string String to search cards in the customer's collection.
-     * @return HashSet of cards that match.
-     */
-    public Collection searchByString(String string) {
-
-        try {
-            Collection cardsFound = collection.searchByString(string);
-            return cardsFound;
-        } catch (CardNotFoundException e) {
-            System.err.println(e.cardNotFound(getId(), getUsername()));
-        }
-
-        return null;
-
     }
 
     /**
@@ -135,6 +91,63 @@ public class Customer implements Serializable {
     }
 
     /**
+     * Method to add a Card to the Customer's collection.
+     *
+     * @param card New Card to add
+     */
+    public void addCard(Card card) {
+        try {
+            collection.addCardToCollection(card);
+        } catch (AddCardException e) {
+            System.err.println(e.getMessage());
+        }
+
+    }
+
+    /**
+     * Method to add Cards to the Customer's collection.
+     * @param cards new cards add
+     */
+    public void addCard(ArrayList<Card> cards) {
+        try {
+            for(Card card : cards) {
+                collection.addCardToCollection(card);
+            }
+        } catch (AddCardException e) {
+            System.err.println(e.getMessage());
+        }
+
+    }
+
+    /**
+     * Remove a Card from the collection of the Customers who calls this method.
+     *
+     * @param card Card to remove
+     */
+    public void removeCard(Card card) {
+        try {
+            collection.removeCardFromCollection(card);
+        } catch (RemoveCardException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    /**
+     * Remove a Card from the collection of the Customers who calls this method.
+     *
+     * @param cards cards to remove
+     */
+    public void removeCard(ArrayList<Card> cards) {
+        try {
+            for(Card card : cards){
+                collection.removeCardFromCollection(card);
+            }
+        } catch (RemoveCardException e) {
+            System.err.println(e.getMessage());
+        }
+    }
+
+    /**
      * Method to add a Card to the Customer's wish list .
      *
      * @param cardDescription Card description to add.
@@ -165,42 +178,6 @@ public class Customer implements Serializable {
     }
 
     /**
-     * Search a Card in the collections of the customers by tags.
-     *
-     * @param description String to search cards in the customer's collection.
-     * @return HashSet of cards that match.
-     */
-    public HashMap<Customer, Collection> searchByDescription(Description description) {
-
-        try {
-            HashMap<Customer, Collection> cardsFound = new HashMap<Customer, Collection>();
-            Collection cards = collection.searchByDescription(description);
-            cardsFound.put(this, cards);
-            return cardsFound;
-        } catch (CardNotFoundException e) {
-            System.err.println(e.cardNotFound(getId(), getUsername()));
-        }
-
-        return null;
-    }
-
-    /**
-     *
-     * @return the collection of the customer
-     */
-    public Collection getCollection() {
-        return collection;
-    }
-
-    /**
-     *
-     * @return the wishlist of the customer
-     */
-    public ArrayList<Description> getWishList() {
-        return wishList;
-    }
-
-    /**
      * Getter of the customer's id.
      *
      * @return Id of the customer
@@ -218,6 +195,35 @@ public class Customer implements Serializable {
         return username;
     }
 
+    /**
+     * Getter of the customer's password
+     *
+     * @return Customer's password
+     */
+    public String getPassword() { return this.password; }
+
+    /**
+     *Getter of the customer's collection
+     * @return the collection of the customer
+     */
+    public Collection getCollection() {
+        return collection;
+    }
+
+    /**
+     *Getter of a customer's Wishlist
+     *
+     * @return the wishlist of the customer
+     */
+    public ArrayList<Description> getWishList() {
+        return wishList;
+    }
+
+    /**
+     * Override toString method
+     *
+     * @return The description of the User
+     */
     @Override
     public String toString() {
         return this.id + ": " + this.username + "\n";

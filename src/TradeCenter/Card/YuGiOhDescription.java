@@ -2,17 +2,22 @@ package TradeCenter.Card;
 
 import java.awt.image.BufferedImage;
 
+/**
+ * Calss that represents the YuGiOh collection
+ */
+
 public class YuGiOhDescription extends Description{
 
 
-    private String cardID;
+    private int cardID;
     private int level;
     private int atk;
     private int def;
+    private String reference;
     private String monster_type_id;
     private String card_type_id;
 
-
+    private static final long serialVersionUID = 8794060548502010738L;
     /**
      * Constructor method
      *
@@ -26,9 +31,10 @@ public class YuGiOhDescription extends Description{
      * @param monster_type_id   The type of a monster
      * @param card_type_id           Type of the card: monster, magical or trap
      */
-    public YuGiOhDescription(String name, String text, BufferedImage pic, String cardID, int level, int atk, int def, String monster_type_id, String card_type_id) {
+    public YuGiOhDescription(String name, String text, BufferedImage pic, int cardID, String reference, int level, int atk, int def, String monster_type_id, String card_type_id) {
         super(name, text, CardType.YUGIOH, pic);
         this.cardID = cardID;
+        this.reference = reference;
         this.level = level;     //if not a monster, everthing already handled while taking the object
         this.atk = atk;
         this.def = def;
@@ -37,14 +43,16 @@ public class YuGiOhDescription extends Description{
     }
 
     /**
+     *Getter of the card ID
      *
      * @return the description of the card
      */
-    public String getCardID() {
+    public int getCardID() {
         return cardID;
     }
 
     /**
+     *Getter of the level
      *
      * @return the stars value of the yugioh card
      */
@@ -53,6 +61,7 @@ public class YuGiOhDescription extends Description{
     }
 
     /**
+     *Getter of he attack
      *
      * @return the attack value of the yugioh card
      */
@@ -61,6 +70,7 @@ public class YuGiOhDescription extends Description{
     }
 
     /**
+     *Getter of the defense
      *
      * @return the defense value of the yugioh card
      */
@@ -69,6 +79,7 @@ public class YuGiOhDescription extends Description{
     }
 
     /**
+     *Getter of the monster type
      *
      * @return the type of monster of the yugioh card
      */
@@ -77,6 +88,7 @@ public class YuGiOhDescription extends Description{
     }
 
     /**
+     *Getter of the card type
      *
      * @return if the card is a monster, a magical or a trap
      */
@@ -85,6 +97,15 @@ public class YuGiOhDescription extends Description{
     }
 
     /**
+     * Getter of the reference
+     * @return: reference (a code of a card)
+     */
+    public String getReference() {
+        return reference;
+    }
+
+    /**
+     *Override toString method
      *
      * @return the card name
      */

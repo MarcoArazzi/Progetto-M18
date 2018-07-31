@@ -1,27 +1,42 @@
 package TradeCenter.Trades;
 
-import java.util.ArrayList;
+import DatabaseProxy.FakeOffer;
+
+/**
+ * The actual trade between teo customers
+ */
 
 public class Trade extends ATrade {
 
     /**
-     * @param history List of all past offers in the current trade
      * @param tradeCounter Counter of how many offers have been made in the current trade
      * @param doneDeal Boolean value to know when a deal is over, ending the current trade
      */
-    private ArrayList<Offer> history = new ArrayList<>();
     private boolean doneDeal;
     private boolean positiveEnd;
+    private int id;
 
     /**
      * Start a trade from an offer
      * @param offer Starting offer
      */
-    public Trade(Offer offer) {
+    public Trade(Offer offer, int id) {
         super(offer.getCustomer1(), offer.getCustomer2(), offer.getOffer1(), offer.getOffer2());
-        this.history.add(offer);
         this.doneDeal = false;
         this.positiveEnd = false;
+        this.id = id;
+    }
+
+    /**
+     * Start a trade from a fake offer (used by dbproxy)
+     * @param fakeOffer: resumed offer
+     */
+    public Trade(FakeOffer fakeOffer) {
+        super(fakeOffer.getCustomer1(), fakeOffer.getCustomer2(), fakeOffer.getOffer1(), fakeOffer.getOffer2());
+        this.doneDeal = fakeOffer.getDoneDeal();
+        super.setDate(fakeOffer.getDate());
+        this.positiveEnd = fakeOffer.isPositiveEnd();
+        this.id = fakeOffer.getId();
     }
 
     /**
@@ -29,21 +44,8 @@ public class Trade extends ATrade {
      * @param offer New offer to update current trade and save into history
      * @return boolean to check wheter or not the method ran fine
      */
-    public void update(Offer offer) {
-        this.history.add(offer);
-        super.updateParameters(offer.getOffer1(), offer.getOffer2(), offer.date);
-        this.checkDeal(offer);
-    }
-
-    /**
-     * Method to check if a trade is over
-     * @param offer Last offer to compare to previous one
-     * @return if last offer has same plate as the previous one, meaning the user accepted the offer
-     */
-    private void checkDeal(Offer offer) {
-        if(history.get(history.size()-1).isAcceptedOffer()) {
-            this.doneDeal = true;
-        }
+    public void update(Offer offer, boolean flag) {
+        super.updateParameters(offer.getCustomer1(), offer.getCustomer2(), offer.getOffer1(), offer.getOffer2(), offer.getDate(), flag);
     }
 
     /**
@@ -54,24 +56,38 @@ public class Trade extends ATrade {
         return doneDeal;
     }
 
-    //todo add javadocs
+    /**
+     * Set the deal status (done or not done)
+     * @param result: deal status
+     */
     public void doneDeal(boolean result) {
-        //todo cosi il metono checkdeal è inutile
         this.doneDeal = true;
         this.positiveEnd = result;
     }
 
-    //todo add javadocs
+    /**
+     * Return if the trade had a positive end
+     * @return boolean
+     */
     public boolean isPositiveEnd() {
         return positiveEnd;
     }
-    //todo vedere perchè c'è in offer una cosa simile
 
-    public boolean betweenUsers(String username) {
-        if(super.getCustomer1().getUsername().equals(username) || super.getCustomer2().getUsername().equals(username)) {
-            return true;
-        }
-        else return false;
+    /**
+     * Return if the trade is between a given customer ID
+     * @param id
+     * @return
+     */
+    public boolean betweenUsers(String id) {
+        return (super.getCustomer1().equals(id) || super.getCustomer2().equals(id));
+    }
+
+    /**
+     * Get the trade's id
+     * @return trade's id
+     */
+    public int getId() {
+        return id;
     }
 
     /**
@@ -80,11 +96,34 @@ public class Trade extends ATrade {
      */
     @Override
     public String toString() {
-        StringBuilder tmp = new StringBuilder();
-        tmp.append(getCustomer1().getUsername());
-        tmp.append(" - ");
-        tmp.append(getCustomer2().getUsername());
-        tmp.append("\n" + date);
-        return tmp.toString();
+        return getCustomer1() + " - " + getCustomer2() + "\nOn the " + super.getDate().toString() + "\n";
+    }
+
+
+
+    /**
+     * Override of the equals method
+     * @param obj a card
+     * @return if two cards are equals to each other
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if(obj!=null) {
+            Trade t = (Trade) obj;
+            return this.id == t.id;
+        }
+        return false;
+    }
+
+    /**
+     *Method that make the same trade have the same ID
+     *
+     * @return hashcode
+     */
+
+    public int hashCode() {
+        int hash = 1;
+        hash = hash * this.id;
+        return hash;
     }
 }

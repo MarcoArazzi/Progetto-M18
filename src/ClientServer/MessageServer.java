@@ -1,7 +1,7 @@
 package ClientServer;
 
 import Interface.searchCard.filterChoice.PokemonAll;
-import TradeCenter.Card.Card;
+import Interface.searchCard.filterChoice.YuGiOhAll;
 import TradeCenter.Card.Description;
 import TradeCenter.Customers.Collection;
 import TradeCenter.Customers.Customer;
@@ -10,7 +10,6 @@ import TradeCenter.Trades.Offer;
 import TradeCenter.Trades.Trade;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 
 public class MessageServer implements Serializable {
 
@@ -26,8 +25,12 @@ public class MessageServer implements Serializable {
     private Collection offer2;
     private Trade trade1;
     private boolean flag;
-
     private PokemonAll pokemonAll;
+    private YuGiOhAll yuGiOhAll;
+    private  Description descriptionToAdd;
+    private String customerFrom;
+
+    private static final long serialVersionUID = 4415426162143895504L;
 
     public MessageServer(MessageType message, String string1, String string2) {
         this.message = message;
@@ -56,6 +59,7 @@ public class MessageServer implements Serializable {
         this.message = message;
         this.string1 = username;
     }
+
 
     public MessageServer(MessageType message, Offer offer) {
         this.message = message;
@@ -86,9 +90,15 @@ public class MessageServer implements Serializable {
         this.offer2 = offer2;
     }
 
-    public MessageServer(MessageType message, PokemonAll pokemonAll) {
+    public MessageServer(MessageType message, PokemonAll pokemonAll,String customerFrom) {
         this.message=message;
         this.pokemonAll=pokemonAll;
+        this.customerFrom=customerFrom;
+    }
+    public MessageServer(MessageType message, YuGiOhAll yuGiOhAll,String customerFrom){
+        this.message=message;
+        this.yuGiOhAll=yuGiOhAll;
+        this.customerFrom=customerFrom;
     }
 
     public MessageServer(MessageType message, Trade trade1) {
@@ -108,12 +118,30 @@ public class MessageServer implements Serializable {
         this.description = description;
     }
 
-    public boolean isFlag() {
-        return flag;
+    public MessageServer(MessageType message, String string1, String string2, Collection offer1, Collection offer2) {
+        this.message = message;
+        this.string1 = string1;
+        this.string2 = string2;
+        this.offer1 = offer1;
+        this.offer2 = offer2;
     }
 
-    public Trade getTrade1() {
-        return trade1;
+    public MessageServer(MessageType message, String string1, String string2, Collection offer1, Collection offer2, boolean flag) {
+        this.message = message;
+        this.string1 = string1;
+        this.string2 = string2;
+        this.offer1 = offer1;
+        this.offer2 = offer2;
+        this.flag = flag;
+    }
+    public MessageServer(MessageType message, Description descriptionToAdd, String customerFrom){
+        this.message=message;
+        this.descriptionToAdd=descriptionToAdd;
+        this.customerFrom=customerFrom;
+    }
+
+    public boolean isFlag() {
+        return flag;
     }
 
     public PokemonAll getPokemonAll() {
@@ -158,5 +186,21 @@ public class MessageServer implements Serializable {
 
     public ATrade getTrade() {
         return trade;
+    }
+
+    public Trade getTrade1() {
+        return trade1;
+    }
+
+    public YuGiOhAll getYuGiOhAll() {
+        return yuGiOhAll;
+    }
+
+    public Description getDescriptionToAdd() {
+        return descriptionToAdd;
+    }
+
+    public String getCustomerFrom() {
+        return customerFrom;
     }
 }

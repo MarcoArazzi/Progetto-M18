@@ -3,7 +3,15 @@ package Interface;
 
 import ClientServer.MessageServer;
 import ClientServer.MessageType;
+import ClientServer.ServerIP;
+import TradeCenter.Card.Card;
 import TradeCenter.Customers.Customer;
+import TradeCenter.Trades.Trade;
+import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXListView;
+import com.jfoenix.controls.JFXTextField;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -20,79 +28,59 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 
+/**
+ * Interface for the Searching of Users
+ */
+
 
 public class SearchUserScene {
 
     static Customer myProfile;
 
+    /**
+     * display the scene
+     * @param mySelf the customer itself
+     * @return the scene
+     */
     static BorderPane display(Customer mySelf){
         myProfile = mySelf;
         BorderPane scene = new BorderPane();
-        TextField searchString = new TextField();
+        JFXTextField searchString = new JFXTextField();
         searchString.setPrefWidth(800);
-        Button search = new Button("Search");
+        JFXButton search = new JFXButton("Search");
+        search.setButtonType(JFXButton.ButtonType.RAISED);
+        searchString.setStyle("-fx-background-color: white;");
         VBox results = new VBox();
         ScrollPane resultsArea = new ScrollPane();
         FlowPane flow = new FlowPane();
         Pane pane = new Pane();
 
-        flow.setStyle("-fx-background-color: #beff8e;");
-        results.setStyle("-fx-background-color: green;");
-        pane.setStyle("-fx-background-color: #beff8e;");
+        flow.setStyle("-fx-background-color: DAE6A2;");
+        results.setStyle("-fx-background-color: DAE6A2;");
+        pane.setStyle("-fx-background-color: DAE6A2;");
 
         search.setOnAction(event -> {
-            int count = 1;
             results.getChildren().removeAll(results.getChildren());
             String searchText = searchString.getText();
             if(searchText == null) searchText = "";     //handling null string
 
             try {
-                Socket socket = new Socket("localhost", 8889);
+                Socket socket = new Socket(ServerIP.ip, ServerIP.port);
                 ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream());
                 ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-                outputStream.writeObject(new MessageServer(MessageType.SEARCHUSER, searchText, mySelf));
-                ArrayList<Customer> users = (ArrayList<Customer>)(inputStream.readObject());
+                outputStream.writeObject(new MessageServer(MessageType.SEARCHUSER, searchText, mySelf.getUsername()));
+                ArrayList<String> users = (ArrayList<String>)(inputStream.readObject());
                 socket.close();
-                if(users != null){
-                    for(Customer customer : users){
-                        TextFlow user = new TextFlow();
-                        HBox hBox = new HBox();
-                        Text username = new Text();
-                        if(count % 2 == 0){
-                            //useraname.setText(customer.getUsername());
-                            username.setText(customer.getUsername());
-                            user.getChildren().add(username);
-                            user.setStyle("-fx-background-color: DAE6A2;");
-                            hBox.getChildren().add(user);
-                            hBox.setStyle("-fx-background-color: DAE6A2;");
-                            count++;
-                        }
-                        else {
-                            username.setText(customer.getUsername());
-                            user.getChildren().add(username);
-                            user.setStyle("-fx-background-color: orange;");
-                            hBox.getChildren().add(user);
-                            hBox.setStyle("-fx-background-color: orange;");
-                            count++;
-                        }
-
-
-                        EventHandler<MouseEvent> eventHandlerBox =
-                                new EventHandler<javafx.scene.input.MouseEvent>() {
-
-                                    @Override
-                                    public void handle(javafx.scene.input.MouseEvent e) {
-                                        MainWindow.refreshDynamicContent(OtherUserProfileScene.display(myProfile, customer));
-                                    }
-                                };
-
-                        user.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_CLICKED, eventHandlerBox);
-                        user.setTextAlignment(TextAlignment.CENTER);
-                        user.setPrefSize(100,10);
-                        //hBox.setFillHeight(true);
-                        hBox.setPadding(new Insets(5,400,5,397));
-                        results.getChildren().add(hBox);
+                if(users != null && !users.isEmpty()){
+                    ObservableList<String> customers = FXCollections.observableArrayList();
+                    customers.addAll(users);
+                    JFXListView<String> usersList = new JFXListView<>();
+                    usersList.getItems().addAll(users);
+                    if(!customers.isEmpty()){
+                        EventHandler<MouseEvent> eventHandlerBox = mouseEvent(usersList);
+                        usersList.setOnMouseClicked(eventHandlerBox);
                     }
+                    usersList.setEditable(true);
                     results.setAlignment(Pos.CENTER);
                     results.setPadding(new Insets(5));
                     results.setFillWidth(true);
@@ -101,9 +89,11 @@ public class SearchUserScene {
                     resultsArea.setFitToHeight(true);
                     resultsArea.setFitToWidth(true);
                     resultsArea.setPadding(new Insets(5));
-                    resultsArea.setStyle("-fx-background-color: #beff8e;");
-                    resultsArea.setContent(flow);
-                    scene.setCenter(flow);
+                    resultsArea.setStyle("-fx-background-color: DAE6A2;");
+                    resultsArea.setContent(usersList);
+                    scene.setCenter(resultsArea);
+                } else {
+                    MainWindow.addDynamicContent(InfoScene.display("No Customers Found", "Interface/imagePack/2000px-Simple_Alert.svg.png", true));
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -113,13 +103,55 @@ public class SearchUserScene {
             });
 
         HBox topScene = new HBox();
-        topScene.setStyle("-fx-background-color: #aa12ff");
+        topScene.setAlignment(Pos.CENTER);
+        topScene.setStyle("-fx-background-color: orange");
         topScene.setSpacing(5.0);
         topScene.setPadding(new Insets(5));
         topScene.getChildren().addAll(searchString, search);
         scene.setTop(topScene);
         scene.setCenter(pane);
         return scene;
+    }
+/**
+ * a method that handle the mouse event when you click on the cell of the listview
+ */
+    public static EventHandler<MouseEvent> mouseEvent(JFXListView<String> usersList){
+        EventHandler<MouseEvent> event = new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                String otherCustomer = usersList.getSelectionModel().getSelectedItem();
+                if(otherCustomer != null) {
+                    MainWindow.refreshDynamicContent(OtherUserProfileScene.display(retrieveCustomer(myProfile.getUsername()), retrieveCustomer(otherCustomer)));
+                }
+            }
+
+        };
+        return event;
+    }
+
+    /**
+     * a method that find a customer
+     * @param customer the searched customer
+     * @return the customer
+     */
+    public static Customer retrieveCustomer(String customer){
+        Customer updatedCustomer = null;
+        Socket socket = null;
+        try {
+            socket = new Socket(ServerIP.ip, ServerIP.port);
+            socket.setTcpNoDelay(true);
+            //socket.setKeepAlive(true);
+            ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
+            os.writeObject(new MessageServer(MessageType.SEARCHCUSTOMER, customer));
+            ObjectInputStream is = new ObjectInputStream(socket.getInputStream());
+            updatedCustomer = (Customer)is.readObject();
+            os.flush();
+            socket.close();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return updatedCustomer;
     }
 
 }

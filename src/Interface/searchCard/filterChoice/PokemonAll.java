@@ -13,16 +13,24 @@ public class PokemonAll implements Serializable {
     int weigth;
     String len1;
     String len2;
+    String text;
     private static final long serialVersionUID = 1L;
 
-    public PokemonAll(String type, int hp, int lev, int weigth, String len1, String len2) {
-        this.type = type;
+    public PokemonAll(String text,String type, int hp, int lev, int weigth, String len1, String len2) {
+        this.text=addCaseNull(text);
         this.hp = hp;
         this.lev = lev;
         this.weigth = weigth;
         this.len1 = addCaseNull(len1);
         this.len2 = addCaseNull(len2);
+        this.type = addCaseNull(type);
 
+
+    }
+
+    @Override
+    public String toString() {
+        return "TYPE: "+type+" HP: "+hp+" LEVEL:   "+lev+" WEIGTH:  "+weigth+" LEN1: "+len1+" LEN2: "+len2;
     }
 
     public String getType() {
@@ -45,8 +53,12 @@ public class PokemonAll implements Serializable {
         return len1;
     }
 
+    public String getText() {
+        return text;
+    }
+
     /**
-     * todo ggiungi
+     * If len is not be set, becomes null
      * @param len
      * @return
      */
@@ -59,6 +71,7 @@ public class PokemonAll implements Serializable {
     public String getLen2() {
         return len2;
     }
+
     private void writeObject(ObjectOutputStream out) throws IOException {
         out.defaultWriteObject();
         out.writeInt(1);

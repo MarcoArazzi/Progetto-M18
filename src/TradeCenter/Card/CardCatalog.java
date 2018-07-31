@@ -2,6 +2,9 @@ package TradeCenter.Card;
 
 import java.util.HashSet;
 
+/**
+ * Class that represents a card catalog.
+ */
 public class CardCatalog {
 
     private HashSet<Description> catalog = new HashSet<>();
@@ -12,5 +15,9 @@ public class CardCatalog {
      */
     public void addDescription(Description description){
         this.catalog.add(description);
+    }
+
+    public HashSet<Description> getCatalog() {
+        return catalog;
     }
 }

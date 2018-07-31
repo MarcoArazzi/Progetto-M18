@@ -1,9 +1,11 @@
 package Interface.searchCard;
 
+import com.jfoenix.controls.JFXSlider;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
@@ -12,10 +14,17 @@ public class YugiohFilter {
     static ComboBox comboMonster;
     static ComboBox comboType;
     static VBox vBoxMain;
-    static Slider atkSlider;
-    static Slider defSlider;
+    static JFXSlider atkSlider;
+    static JFXSlider defSlider;
+    static JFXSlider levSlider;
     static VBox atkContainer;
     static VBox defContainer;
+    static VBox refContainer;
+    static TextField referenceText;
+    static VBox levContainer;
+    static HBox atkLabelContainer;
+    static HBox defLabelContainer;
+    static HBox levLabelContainer;
 
     static Pane display(){
         mainPane=new Pane();
@@ -28,48 +37,63 @@ public class YugiohFilter {
         comboType.setPromptText("Type of Card");
 
 
-        comboMonster.getItems().addAll("--Type of Monster--",
-                "1,Aqua",
-                "2,Beast",
-                "3,Beast-Warrior",
-                "4,Dinosaur",
-                "5,Dragon",
-                "6,Fairy",
-                "7,Fiend",
-                "8,Fish",
-                "9,Insect",
-                "10,Machine",
-                "11,Plant",
-                "12,Pyro",
-                "13,Reptile",
-                "14,Rock",
-                "15,Sea Serpent",
-                "16,Spellcaster",
-                "17,Thunder",
-                "18,Warrior",
-                "19,Winged Beast",
-                "20,Zombie",
-                "21,Psychic");
-        comboType.getItems().addAll("--Type of Cards--",
-                "1,Normal monster",
-                "2,Effect monster",
-                "3,Fusion monster",
-                "4,Ritual monster",
-                "5,Normal spell",
-                "6,Continuous spell",
-                "7,Equip spell",
-                "8,Field spell",
-                "9,Quick-Play spell",
-                "10,Ritual spell",
-                "11,Normal trap",
-                "12,Continuous trap",
-                "13,Counter trap",
-                "14,Synchro monster");
-        //ATK e DEF
+        comboMonster.getItems().addAll("--Nothing--",
+                "Aqua",
+                "Beast",
+                "Beast-Warrior",
+                "Dinosaur",
+                "Dragon",
+                "Fairy",
+                "Fiend",
+                "Fish",
+                "Insect",
+                "Machine",
+                "Plant",
+                "Pyro",
+                "Reptile",
+                "Rock",
+                "Sea Serpent",
+                "Spellcaster",
+                "Thunder",
+                "Warrior",
+                "Winged Beast",
+                "Zombie",
+                "Psychic");
+        comboType.getItems().addAll("--Nothing--",
+                "Normal monster",
+                "Effect monster",
+                "Fusion monster",
+                "Ritual monster",
+                "Normal spell",
+                "Continuous spell",
+                "Equip spell",
+                "Field spell",
+                "Quick-Play spell",
+                "Ritual spell",
+                "Normal trap",
+                "Continuous trap",
+                "Counter trap",
+                "Synchro monster");
+        //Reference
+        refContainer=new VBox();
+        referenceText=new TextField();
+
+        refContainer.setPadding(new Insets(15));
+        refContainer.setSpacing(7);
+        refContainer.setStyle("-fx-background-color: orange");
+        referenceText.setPrefWidth(55);
+        refContainer.getChildren().addAll(new Label("Reference: "),referenceText);
+
+        //ATK,DEF,LEV
         atkContainer=new VBox();
         defContainer=new VBox();
-        atkSlider=new Slider();
-        defSlider=new Slider();
+        levContainer=new VBox();
+        atkLabelContainer=new HBox();
+        defLabelContainer=new HBox();
+        levLabelContainer=new HBox();
+        atkSlider= new JFXSlider();
+        defSlider= new JFXSlider();
+        levSlider= new JFXSlider();
 
         atkContainer.setPadding(new Insets(15));
         atkContainer.setSpacing(7);
@@ -77,7 +101,11 @@ public class YugiohFilter {
         defContainer.setPadding(new Insets(15));
         defContainer.setSpacing(7);
         defContainer.setStyle("-fx-background-color: orange");
+        levContainer.setPadding(new Insets(15));
+        levContainer.setSpacing(7);
+        levContainer.setStyle("-fx-background-color: orange");
 
+        atkSlider.setValue(0);
         atkSlider.setMin(0);
         atkSlider.setMax(5000);
         atkSlider.setShowTickLabels(true);
@@ -86,8 +114,7 @@ public class YugiohFilter {
         atkSlider.setMinorTickCount(250);
         atkSlider.setBlockIncrement(500);
 
-
-
+        defSlider.setValue(0);
         defSlider.setMin(0);
         defSlider.setMax(5000);
         defSlider.setShowTickLabels(true);
@@ -96,36 +123,80 @@ public class YugiohFilter {
         defSlider.setMinorTickCount(250);
         defSlider.setBlockIncrement(500);
 
+        levSlider.setValue(0);
+        levSlider.setMin(0);
+        levSlider.setMax(7);
+        levSlider.setShowTickLabels(true);
+        levSlider.setShowTickMarks(true);
+        levSlider.setMajorTickUnit(1);
+        levSlider.setMinorTickCount(1);
+        levSlider.setBlockIncrement(1);
+
         Label atkLabel=new Label("--");
         Label defLabel=new Label("--");
-        atkContainer.getChildren().addAll(new Label("ATK:"),atkSlider,atkLabel);
-        defContainer.getChildren().addAll(new Label("DEF:") ,defSlider,defLabel);
+        Label levLabel=new Label("--");
 
 
+        atkLabelContainer.getChildren().addAll(new Label("ATK: "),atkLabel);
+        defLabelContainer.getChildren().addAll(new Label("DEF: "),defLabel);
+        levLabelContainer.getChildren().addAll(new Label("LEVEL: "),levLabel);
+
+
+        atkContainer.getChildren().addAll(atkLabelContainer,atkSlider);
+        defContainer.getChildren().addAll(defLabelContainer,defSlider);
+        levContainer.getChildren().addAll(levLabelContainer,levSlider);
 
 
         atkSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
-            double valueAtk = 0;
+            //double valueAtk = 0;
             atkLabel.setText(Integer.toString(newValue.intValue()   ));
-            valueAtk=newValue.doubleValue();
-
+//            valueAtk=newValue.doubleValue();
         });
-        /*
-        if(atkSlider.is)
-        Label valueLabel=new Label("value atk current?");
-        valueLabel.setText(Integer.toString((int) valueAtk));*/
 
         defSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
             defLabel.setText(Integer.toString(newValue.intValue()   ));
-
         });
 
+        levSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+            levLabel.setText(Integer.toString(newValue.intValue()   ));
+        });
+        //CheckBox
+        HBox checkContainer=new HBox();
+        CheckBox cbAtk=new CheckBox("ATK ");
+        CheckBox cbLev=new CheckBox("Level ");
+        CheckBox cbDef=new CheckBox("DEF ");
+        CheckBox cbReF=new CheckBox("Ref");
+        checkContainer.getChildren().addAll(cbAtk,cbDef,cbLev,cbReF);
+
+        //Action check
+        CheckBox cbList[]={cbAtk,cbDef,cbLev,cbReF};
+        Pane container[]={atkContainer,defContainer,levContainer,refContainer};
+        for (int i=0;i<cbList.length;i++) {
+            Pane containerCurr=container[i];
+            cbList[i].selectedProperty().addListener(new ChangeListener<Boolean>() {
+                @Override
+                public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                    if(newValue){
+                        vBoxMain.getChildren().add(containerCurr);
+                    }
+                    else if (vBoxMain.getChildren().contains(containerCurr)){
+                        vBoxMain.getChildren().remove(containerCurr);
+                    }
+                }
+            });
+        }
 
 
-        vBoxMain.getChildren().addAll(comboType,comboMonster,atkContainer,defContainer/*,valueLabel*/);
+
+        vBoxMain.getChildren().addAll(comboType,comboMonster,checkContainer);
         mainPane.getChildren().add(vBoxMain);
         return mainPane;
     }
+
+    public static TextField getReferenceText() {
+        return referenceText;
+    }
+
     public static ComboBox getComboMonster() {
         return comboMonster;
     }
@@ -140,5 +211,9 @@ public class YugiohFilter {
 
     public static Slider getDefSlider() {
         return defSlider;
+    }
+
+    public static Slider getLevSlider() {
+        return levSlider;
     }
 }

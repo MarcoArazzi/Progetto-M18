@@ -1,5 +1,6 @@
 package Interface.searchCard;
 
+import com.jfoenix.controls.JFXSlider;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
@@ -14,9 +15,9 @@ public class PokemonFilter {
     static Pane mainPane;
     static VBox vBoxMain;
     static ComboBox comboType;
-    static Slider hpSlider;
-    static Slider levSlider;
-    static Slider weightSlider;
+    static JFXSlider hpSlider;
+    static JFXSlider levSlider;
+    static JFXSlider weightSlider;
     static VBox hpContainer;
     static VBox levContainer;
     static VBox weigthContainer;
@@ -24,14 +25,17 @@ public class PokemonFilter {
     static TextField textLen1;
     static TextField textLen2;
     static HBox checkContainer;
+    static HBox hpLabelContainer;
+    static HBox levLabelContainer;
+    static HBox weightLabelContainer;
 
     static Pane display(){
         mainPane=new Pane();
         vBoxMain=new VBox();
         comboType=new ComboBox();
-        hpSlider=new Slider();
-        levSlider=new Slider();
-        weightSlider=new Slider();
+        hpSlider= new JFXSlider();
+        levSlider= new JFXSlider();
+        weightSlider= new JFXSlider();
         hpContainer=new VBox();
         levContainer=new VBox();
         weigthContainer=new VBox();
@@ -41,7 +45,7 @@ public class PokemonFilter {
         vBoxMain.setSpacing(10);
 
         comboType.setPromptText("Type of Pokèmon");
-        comboType.getItems().addAll("--Type of Card--",
+        comboType.getItems().addAll("--Nothing--",
                 "Psychic",
                 "Water",
                 "Fairy",
@@ -67,6 +71,7 @@ public class PokemonFilter {
         weigthContainer.setStyle("-fx-background-color: orange");
 
 
+        hpSlider.setValue(0);
         hpSlider.setMin(0);
         hpSlider.setMax(200);
         hpSlider.setShowTickLabels(true);
@@ -75,6 +80,7 @@ public class PokemonFilter {
         hpSlider.setMinorTickCount(5);
         hpSlider.setBlockIncrement(10);
 
+        levSlider.setValue(0);
         levSlider.setMin(0);
         levSlider.setMax(76);
         levSlider.setShowTickLabels(true);
@@ -83,6 +89,7 @@ public class PokemonFilter {
         levSlider.setMinorTickCount(2);
         levSlider.setBlockIncrement(5);
 
+        weightSlider.setValue(0);
         weightSlider.setMin(0);
         weightSlider.setMax(100);//518
         weightSlider.setShowTickLabels(true);
@@ -91,32 +98,39 @@ public class PokemonFilter {
         weightSlider.setMinorTickCount(2);
         weightSlider.setBlockIncrement(5);
 
+        hpLabelContainer=new HBox();
+        levLabelContainer=new HBox();
+        weightLabelContainer=new HBox();
+
         Label hpLabel=new Label("--");
         Label levLabel=new Label("--");
         Label weightLabel=new Label("--");
-        hpContainer.getChildren().addAll(new Label("HP: "), hpSlider,hpLabel);
-        levContainer.getChildren().addAll(new Label("Level: "), levSlider,levLabel);
-        weigthContainer.getChildren().addAll(new Label("Weigth: "), weightSlider,weightLabel);
+
+        hpLabelContainer.getChildren().addAll(new Label("HP: "),hpLabel);
+        levLabelContainer.getChildren().addAll(new Label("Level: "),levLabel);
+        weightLabelContainer.getChildren().addAll(new Label("Weigth: "),weightLabel);
+
+        hpContainer.getChildren().addAll(hpLabelContainer,hpSlider);
+        levContainer.getChildren().addAll(levLabelContainer,levSlider);
+        weigthContainer.getChildren().addAll(weightLabelContainer, weightSlider);
 
         //Length:
         lengContainer= new HBox();
         textLen1=new TextField();
         textLen2=new TextField();
-        textLen1.setPrefSize(0.8,0.8); //capire come settarli giusti
-        textLen2.setPrefSize(5,3);
+        textLen1.setPrefWidth(45); //capire come settarli giusti
+        textLen2.setPrefWidth(45);
         lengContainer.setPadding(new Insets(15));
         lengContainer.setSpacing(7);
         lengContainer.setStyle("-fx-background-color: orange");
 
-
-
         lengContainer.getChildren().addAll(new Label("Length:"),textLen1,new Label(" ' "),textLen2,new Label(" '' "));
 
         //check boxes
-        CheckBox cbHp=new CheckBox("HP");
-        CheckBox cbLev=new CheckBox("Level");
-        CheckBox cbWeigth=new CheckBox("Weight");
-        CheckBox cbLenght=new CheckBox("Lenght");
+        CheckBox cbHp=new CheckBox("HP ");
+        CheckBox cbLev=new CheckBox("Level ");
+        CheckBox cbWeigth=new CheckBox("Weight ");
+        CheckBox cbLenght=new CheckBox("Lenght ");
         checkContainer.getChildren().addAll(cbHp,cbLev,cbWeigth,cbLenght);
 
 
@@ -162,7 +176,6 @@ public class PokemonFilter {
             weightLabel.setText(Integer.toString(newValue.intValue()   ));
         });
 
-
         vBoxMain.getChildren().addAll(comboType,checkContainer);
         mainPane.getChildren().add(vBoxMain);
         return mainPane;
@@ -173,8 +186,6 @@ public class PokemonFilter {
             cb.setSelected(false);
         }
     }
-
-
     public static ComboBox getComboType() {
         return comboType;
     }

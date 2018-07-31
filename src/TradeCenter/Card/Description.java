@@ -5,6 +5,10 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.HashSet;
 
+/**
+ * Abstract class that represents the parameters for an entire collection
+ */
+
 public abstract class Description implements Serializable {
 
     private static final long serialVersionUID = -7217318823889023675L;
@@ -19,7 +23,7 @@ public abstract class Description implements Serializable {
       */
     private String name;
     private String text;
-    transient private BufferedImage pic; //formati supportati: GIF,PNG,JPEG,BMP,WBMP
+    transient private BufferedImage pic; //supported formats: GIF,PNG,JPEG,BMP,WBMP
     private HashSet<String> listTag;
     private CardType descrType;
 
@@ -72,17 +76,22 @@ public abstract class Description implements Serializable {
      * @param tag the tag that will be added
      * @return boolean if the operatinons is done correctly
      * */
-    public boolean addTag(String tag){
+    private boolean addTag(String tag){
         return listTag.add(tag.toLowerCase()); //all tags are lowercase
     }
 
     /**
+     * Getter of the name
+     *
      * @return the name of the card
      * */
     public String getName() {
         return name;
     }
+
     /**
+     * Getter of the text
+     *
      * @return the description of the card
      * */
     public String getText() {
@@ -90,14 +99,17 @@ public abstract class Description implements Serializable {
     }
 
     /**
-     * @return the image
+     * Getter of the image
      *
+     * @return the image
      * */
     public BufferedImage getPic() {
         return pic;
     }
 
     /**
+     * Getter of the list of the card's tag
+     *
      * @return the list of the card's tags
      * */
     public HashSet<String> getListTag() {
@@ -105,6 +117,7 @@ public abstract class Description implements Serializable {
     }
 
     /**
+     *Getter of the description
      *
      * @return the type of the card
      */

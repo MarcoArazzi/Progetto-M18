@@ -2,10 +2,13 @@ package Interface;
 
 import ClientServer.MessageServer;
 import ClientServer.MessageType;
+import ClientServer.ServerIP;
 import TradeCenter.Card.Card;
 import TradeCenter.Card.Description;
 import TradeCenter.Customers.Customer;
-import TradeCenter.Trades.Trade;
+import com.jfoenix.controls.JFXButton;
+import javafx.animation.FadeTransition;
+import javafx.animation.ScaleTransition;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -18,14 +21,16 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import javafx.scene.text.Text;
+import javafx.util.Duration;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-
+/**
+ * Interface to see other user's account
+ */
 public class OtherUserProfileScene {
 
     static StackPane cardList;
@@ -38,7 +43,13 @@ public class OtherUserProfileScene {
     static Customer otherCustomer;
     static String displayed = "Collection";
 
-    static BorderPane display(Customer myCustomer, Customer otherUser) {
+    /**
+     * method to display the scene
+     * @param myCustomer the customer itself
+     * @param otherUser the other customer
+     * @return the scene
+     */
+    public static BorderPane display(Customer myCustomer, Customer otherUser) {
         otherCustomer = otherUser;
         borderPane = new BorderPane();
         cardList = new StackPane();
@@ -46,12 +57,15 @@ public class OtherUserProfileScene {
         HBox buttons= new HBox();
         buttons.setPadding(new Insets(10));
         buttons.setSpacing(10);
-        Button collection = new Button("Collection");
-        Button wishlist = new Button("Wishlist");
-        Button trade = new Button("Trade");
+        JFXButton collection = new JFXButton("Collection");
+        collection.setButtonType(JFXButton.ButtonType.RAISED);
+        JFXButton wishlist = new JFXButton("Wishlist");
+        wishlist.setButtonType(JFXButton.ButtonType.RAISED);
+        JFXButton trade = new JFXButton("Trade");
+        trade.setButtonType(JFXButton.ButtonType.RAISED);
         buttons.getChildren().addAll(collection, wishlist, trade);
         HBox titleBox = new HBox();
-        Label title = new Label(otherUser.getUsername() + "'s" + displayed);
+        Label title = new Label(otherUser.getUsername() + "'s " + displayed);
         titleBox.setAlignment(Pos.CENTER);
         title.setStyle("-fx-font-weight: bold");
         title.setScaleX(1.35);
@@ -65,7 +79,7 @@ public class OtherUserProfileScene {
         hBox.getChildren().addAll(buttons, titleBox);
         hBox.setPadding(new Insets(10));
         hBox.setSpacing(300);
-        hBox.setStyle("-fx-background-color: #cc003a");
+        hBox.setStyle("-fx-background-color: orange");
 
         borderPane.setCenter(displayCollection(otherCustomer));
         borderPane.setBottom(hBox);
@@ -86,26 +100,15 @@ public class OtherUserProfileScene {
             MainWindow.refreshDynamicContent(borderPane);
         });
         trade.setOnAction(event -> {
-            Socket socket = null;
-            boolean flag = false;
             try {
-                socket = new Socket("localhost", 8889);
-                ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
-                os.writeObject(new MessageServer(MessageType.POSSIBLETRADE, myCustomer, otherCustomer));
-                ObjectInputStream is = new ObjectInputStream(socket.getInputStream());
-                flag = (boolean)(is.readObject());
-                if(flag){
-                    MainWindow.refreshDynamicContent(TradeScene.display(null, myCustomer, otherCustomer,false));
+
+                if(possibleTrade(myCustomer.getId(),otherCustomer.getId())){
+                    MainWindow.refreshDynamicContent(TradeScene.display(null, myCustomer, otherCustomer,false, false));
                 }else{
-                    //todo trade gia esistente, fare infobox, poi rimandare a trade
-                    os.writeObject(new MessageServer(MessageType.SEARCHTRADE, myCustomer, otherCustomer));
-                    Trade searchTrade = (Trade)(is.readObject());
-                    MainWindow.refreshDynamicContent(TradeScene.display(searchTrade, myCustomer, otherCustomer,true));
+
+                    MainWindow.addDynamicContent(InfoScene.display("The trade with "+ otherCustomer.getUsername() +"\nis already started\nsee it in My Trades", "Interface/imagePack/2000px-Simple_Alert.svg.png", false));
                 }
-                socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (ClassNotFoundException e) {
+            } catch (IOException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
 
@@ -114,10 +117,15 @@ public class OtherUserProfileScene {
         return borderPane;
     }
 
+    /**
+     * method used to see the other user's collection
+     * @param customer the other customer
+     * @return the pane
+     */
     private static ScrollPane displayCollection(Customer customer){
         FlowPane flowPane = new FlowPane();
         cardGrid = new ScrollPane();
-        flowPane.setStyle("-fx-background-color: #fbff2e");
+        flowPane.setStyle("-fx-background-color: DAE6A2;");
 
         for (Card card: customer.getCollection()){
             BorderPane cardPane = new BorderPane();
@@ -126,17 +134,27 @@ public class OtherUserProfileScene {
             imageView.setImage(image);
             imageView.setPreserveRatio(true);
             imageView.setFitHeight(285);
+            ImageView imageCopy = new ImageView(image);
+            imageCopy.setPreserveRatio(true);
+            imageCopy.setFitHeight(285);
             cardPane.setCenter(imageView);
-            EventHandler<MouseEvent> eventHandlerBox =
-                    new EventHandler<javafx.scene.input.MouseEvent>() {
-
-                        @Override
-                        public void handle(javafx.scene.input.MouseEvent e) {
-                            MainWindow.refreshDynamicContent(Demo.display(imageView, "other"));
-                        }
-                    };
+            imageView.setOnMouseEntered(event -> {
+                ScaleTransition st = CollectionScene.addScale(imageView);
+                st.play();
+            });
+            imageView.setOnMouseExited(event -> {
+                ScaleTransition st = CollectionScene.removeScale(imageView);
+                st.play();
+            });
+            EventHandler<MouseEvent> eventHandlerBox = mouseEvent(imageCopy);
 
             imageView.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_CLICKED, eventHandlerBox);
+            FadeTransition ft = new FadeTransition(Duration.millis(500), cardPane);
+            ft.setFromValue(0);
+            ft.setToValue(1);
+            ft.setCycleCount(1);
+            ft.setAutoReverse(true);
+            ft.play();
             flowPane.getChildren().add(cardPane);
             flowPane.setMargin(cardPane, new Insets(10, 5, 10, 5));
         }
@@ -144,13 +162,19 @@ public class OtherUserProfileScene {
         cardGrid.setFitToWidth(true);
         cardGrid.setFitToHeight(true);
         cardGrid.setContent(flowPane);
-        cardGrid.setStyle("-fx-background-color: #fffd14");
+        cardGrid.setStyle("-fx-background-color: DAE6A2;");
         return cardGrid;
     }
+
+    /**
+     * Method used to show the other customer's whishlist
+     * @param customer the other customer
+     * @return the pane
+     */
     private static ScrollPane displayWishlist(Customer customer){
         FlowPane flowPane = new FlowPane();
         cardGrid = new ScrollPane();
-        flowPane.setStyle("-fx-background-color: #fff910");
+        flowPane.setStyle("-fx-background-color: DAE6A2;");
 
         for (Description card: customer.getWishList()){
             BorderPane cardPane = new BorderPane();
@@ -160,26 +184,73 @@ public class OtherUserProfileScene {
             imageView.setPreserveRatio(true);
             imageView.setFitHeight(300);
             cardPane.setCenter(imageView);
-            EventHandler<MouseEvent> eventHandlerBox =
-                    new EventHandler<javafx.scene.input.MouseEvent>() {
-
-                        @Override
-                        public void handle(javafx.scene.input.MouseEvent e) {
-                            MainWindow.refreshDynamicContent(Demo.display(imageView, "other_user"));
-                        }
-                    };
-
+            ImageView imageCopy = new ImageView(image);
+            imageCopy.setPreserveRatio(true);
+            imageCopy.setFitHeight(285);
+            imageView.setOnMouseEntered(event -> {
+                ScaleTransition st = CollectionScene.addScale(imageView);
+                st.play();
+            });
+            imageView.setOnMouseExited(event -> {
+                ScaleTransition st = CollectionScene.removeScale(imageView);
+                st.play();
+            });
+            EventHandler<MouseEvent> eventHandlerBox = mouseEvent(imageCopy);
             imageView.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_CLICKED, eventHandlerBox);
+            FadeTransition ft = new FadeTransition(Duration.millis(500), cardPane);
+            ft.setFromValue(0);
+            ft.setToValue(1);
+            ft.setCycleCount(1);
+            ft.setAutoReverse(true);
+            ft.play();
             flowPane.getChildren().add(cardPane);
             flowPane.setMargin(cardPane, new Insets(10, 5, 10, 5));
         }
         cardGrid.setFitToWidth(true);
         cardGrid.setFitToHeight(true);
         cardGrid.setContent(flowPane);
-        cardGrid.setStyle("-fx-background-color: #fffb48");
+        cardGrid.setStyle("-fx-background-color: DAE6A2;");
         return cardGrid;
     }
 
+    /**
+     * method that handle the mouse event
+     * @param imageView the card's image
+     * @return the event of clicked card
+     */
+    public static EventHandler<MouseEvent> mouseEvent(ImageView imageView){
+        EventHandler<MouseEvent> event = new EventHandler<MouseEvent>() {
+
+            @Override
+            public void handle(javafx.scene.input.MouseEvent e) {
+                MainWindow.refreshDynamicContent(Demo.display(imageView, "other_user"));
+            }
+        };
+        return event;
+    }
+
+    /**
+     * method that talls if a trade is possible
+     * @param myId the id
+     * @param otehrId the other id
+     * @return if it's possible or not
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    private static boolean possibleTrade(String myId, String otehrId) throws IOException, ClassNotFoundException {
+        Socket socket = new Socket(ServerIP.ip, ServerIP.port);
+        ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
+        os.writeObject(new MessageServer(MessageType.POSSIBLETRADE, myId, otehrId));
+        ObjectInputStream is = new ObjectInputStream(socket.getInputStream());
+        boolean flag = (boolean)(is.readObject());
+        socket.close();
+        return flag;
+    }
+
+    /**
+     * method that display the first view
+     * @return the pane
+     */
     public static BorderPane refresh(){
         cardList.getChildren().removeAll(cardList.getChildren());
         if(watchingWishlist){

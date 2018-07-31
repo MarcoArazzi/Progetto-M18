@@ -2,15 +2,23 @@ package Interface;
 
 import ClientServer.MessageServer;
 import ClientServer.MessageType;
+import ClientServer.ServerIP;
 import Interface.searchCard.SearchCardScene;
 import TradeCenter.Card.Card;
 import TradeCenter.Card.YuGiOhDescription;
 import TradeCenter.Customers.Collection;
 import TradeCenter.Customers.Customer;
+import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXScrollPane;
+import javafx.animation.FadeTransition;
+import javafx.animation.Interpolator;
+import javafx.animation.ScaleTransition;
+import javafx.animation.TranslateTransition;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.*;
@@ -18,7 +26,9 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.util.Duration;
 
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -32,26 +42,24 @@ public class CollectionScene{
 
     //static HBox hbox;
 
-    static BorderPane display(Customer customer1, String username, boolean searchFlag) throws IOException, ClassNotFoundException {
-
-        System.out.println("welcome client");
-        Socket socket = new Socket("localhost", 8889);
-
-        System.out.println("Client connected");
-        ObjectOutputStream os = new ObjectOutputStream(socket.getOutputStream());
-        System.out.println("Ok");
-        os.writeObject(new MessageServer(MessageType.SEARCHCUSTOMER, username));
-        ObjectInputStream is1 = new ObjectInputStream(socket.getInputStream());
-        Customer returnMessage1 = (Customer) is1.readObject();
-        socket.close();
+    /**
+     * Shows the collection of the customer
+     * @param customer Customer logged
+     * @param username Username of the customer
+     * @return BorderPane with the collection
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    static BorderPane display(Customer customer, String username) throws IOException, ClassNotFoundException {
 
 
-        cust=returnMessage1;
+        cust=SearchUserScene.retrieveCustomer(customer.getUsername());
         user=username;
-        ScrollPane scroll = new ScrollPane();
-        HBox hbox = new HBox();
+        ScrollPane scroll;
+        HBox hbox;
         BorderPane border = new BorderPane();
-        Button buttonAdd= new Button("Add Card \uD83C\uDCCF");
+        JFXButton buttonAdd= new JFXButton("Add Card \uD83C\uDCCF");
+        buttonAdd.setButtonType(JFXButton.ButtonType.RAISED);
         hbox = new HBox();
         hbox.setPadding(new Insets(5));
         hbox.setSpacing(580);
@@ -64,9 +72,8 @@ public class CollectionScene{
         textFlow.getChildren().add(text);
         textFlow.setPrefWidth(200);
         hbox.getChildren().add(textFlow);
-        if(!searchFlag) {
-            hbox.getChildren().add(buttonAdd);
-        }
+        hbox.getChildren().add(buttonAdd);
+
 
         FlowPane flow = new FlowPane();
 
@@ -79,74 +86,116 @@ public class CollectionScene{
         scroll.setFitToHeight(true);
         scroll.setFitToWidth(true);
         scroll.setContent(flow);
+        for(Card card : cust.getCollection()){
 
-        for(Card file2 : cust.getCollection()){
             BorderPane pane = new BorderPane();
 
             pane.setPadding(new Insets(5,0,0,5));
 
-            Image image3 = SwingFXUtils.toFXImage(file2.getDescription().getPic(),null);
-            ImageView card = new ImageView();
-            card.setImage(image3);
-            card.setPreserveRatio(true);
-            card.setFitHeight(285);
+            Image image = SwingFXUtils.toFXImage(card.getDescription().getPic(),null);
+            ImageView imageView = new ImageView();
+            imageView.setImage(image);
+            imageView.setPreserveRatio(true);
+            imageView.setFitHeight(285);
+            ImageView imageCopy = new ImageView(image);
+            imageCopy.setPreserveRatio(true);
+            imageCopy.setFitHeight(285);
 
-            pane.setCenter(card);
+            pane.setCenter(imageView);
 
             EventHandler<javafx.scene.input.MouseEvent> eventHandlerBox =
                     new EventHandler<javafx.scene.input.MouseEvent>() {
 
                         @Override
                         public void handle(javafx.scene.input.MouseEvent e) {
-                            MainWindow.refreshDynamicContent(Demo.display(card, "collection"));
+                            MainWindow.refreshDynamicContent(Demo.display(imageCopy, "collection"));
                         }
                     };
 
-            card.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_CLICKED, eventHandlerBox);
+            imageView.addEventHandler(javafx.scene.input.MouseEvent.MOUSE_CLICKED, eventHandlerBox);
 
-            if(searchFlag){
-                HBox hbox1 = new HBox();
-                hbox1.setPadding(new Insets(10));
-                hbox1.setSpacing(10);
-                hbox1.setAlignment(Pos.CENTER);
-                Button buUser = new Button(username);
-                Button bTrade = new Button("Trade");
-                hbox1.getChildren().addAll(buUser, bTrade);
-                hbox1.setStyle("-fx-background-color: orange");
-                pane.setBottom(hbox1);
-                buUser.setOnAction(event -> {
-                    try {
-                        os.writeObject(new MessageServer(MessageType.SEARCHCUSTOMER, username));
-                        ObjectInputStream is = new ObjectInputStream(socket.getInputStream());
-                        Customer returnMessage = (Customer) is.readObject();
-                        MainWindow.refreshDynamicContent(OtherUserProfileScene.display(customer1, returnMessage));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (ClassNotFoundException e) {
-                        e.printStackTrace();
-                    }
+            imageView.setOnMouseEntered(event -> {
+                ScaleTransition translation = addScale(imageView);
+                translation.play();
+            });
 
-                });
-
-            }
-
+            imageView.setOnMouseExited(event -> {
+                ScaleTransition translation = removeScale(imageView);
+                translation.play();
+            });
+            ScaleTransition ft = new ScaleTransition(Duration.millis(500), pane);
+            ft.setFromX(0);
+            ft.setFromY(0);
+            ft.setToX(1);
+            ft.setToY(1);
+            ft.setAutoReverse(true);
+            ft.play();
             flow.getChildren().add(pane);
             flow.setMargin(pane, new Insets(5, 0, 5, 0));
         }
         buttonAdd.setOnAction(event -> {
-
-            MainWindow.refreshDynamicContent(SearchCardScene.display(customer1));
+            Image image = new Image("Interface/imagePack/PackOpening.jpg");
+            ImageView imageView = new ImageView(image);
+            imageView.setPreserveRatio(true);
+            imageView.setFitHeight(600);
+            MainWindow.refreshDynamicContent(imageView);
+            MainWindow.addDynamicContent(AddCardScene.display(customer));
 
         });
         scroll.setPadding(new Insets(3));
         scroll.setStyle("-fx-background-color: orange");
         border.setCenter(scroll);
         border.setTop(hbox);
+        canPack(buttonAdd);
         return border;
     }
 
+    /**
+     * Adds scale animation
+     * @param node Node to add animation
+     * @return The transition
+     */
+    public static ScaleTransition addScale(Node node){
+        ScaleTransition translation = new ScaleTransition(Duration.millis(100), node);
+        translation.setFromX(1);
+        translation.setFromY(1);
+        translation.setToX(1.05);
+        translation.setToY(1.05);
+        translation.setAutoReverse(true);
+        translation.setCycleCount(1);
+        return translation;
+    }
+
+    /**
+     * Adds scale animation
+     * @param node Node to add animation
+     * @return The transition
+     */
+    public static ScaleTransition removeScale(Node node){
+        ScaleTransition translation = new ScaleTransition(Duration.millis(100), node);
+        translation.setFromX(1.05);
+        translation.setFromY(1.05);
+        translation.setToX(1);
+        translation.setToY(1);
+        translation.setAutoReverse(true);
+        translation.setCycleCount(1);
+        return translation;
+    }
+
+    /**
+     * Refresh the scene
+     * @return BorderPane with the collection
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
     static BorderPane refresh() throws IOException, ClassNotFoundException {
-        return display(cust ,user,false);
+        return display(cust ,user);
+    }
+
+    private static void canPack(JFXButton button){
+        if(cust.getCollection().getSet().size()>7){
+            button.setDisable(true);
+        }
     }
 
 }
